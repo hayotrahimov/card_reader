@@ -1,4 +1,4 @@
-def try_this():
+def try_this(additional_place=3):
     # Импорт инструментария
     from imutils import contours
     import numpy as np
@@ -7,7 +7,7 @@ def try_this():
     import myutils
 
     # Установить параметры
-    image = "images/image1.png"
+    image = "images/image2.jpg"
     font = "images/shrift1.png"
     # image = "images/uzcard-milliy.png"
     # font = "images/font-proximanova.png"
@@ -39,7 +39,7 @@ def try_this():
     # cv_show('ref', ref)
     # Двоичное изображение
     ref = cv2.threshold(ref, 10, 255, cv2.THRESH_BINARY_INV)[1]
-    cv_show('ref', ref)
+    # cv_show('ref', ref)
 
     # Рассчитать контур
     # Параметр, принятый
@@ -49,7 +49,7 @@ def try_this():
     refCnts, hierarchy = cv2.findContours(ref.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     cv2.drawContours(img, refCnts, -1, (0, 0, 255), 3)
-    # cv_show('img', img)
+    cv_show('img', img)
     # print(np.array(refCnts).shape)
     refCnts = myutils.sort_contours(refCnts, method="слева направо")[0]  # сортировка слева направо, сверху вниз
     digits = {}
@@ -77,7 +77,7 @@ def try_this():
 
     # Верхняя операция, чтобы выделить более яркие области
     tophat = cv2.morphologyEx(gray, cv2.MORPH_TOPHAT, rectKernel)
-    # cv_show('tophat', tophat)
+    cv_show('tophat', tophat)
     #
     gradX = cv2.Sobel(tophat, ddepth=cv2.CV_32F, dx=1, dy=0,  # ksize = -1 эквивалентно 3 * 3
                       ksize=-1)
@@ -107,8 +107,8 @@ def try_this():
 
     cnts = threshCnts
     cur_img = image.copy()
-    cv2.drawContours(cur_img, cnts, -1, (0, 0, 255), 3)
-    cv_show('img', cur_img)
+    cv2.drawContours(cur_img, cnts, -1, (0, 0, 255), 1)
+    cv_show('img3', cur_img)
     locs = {}
     cards = []
     not_cards = []
@@ -122,7 +122,7 @@ def try_this():
         # Выберите соответствующую область, в соответствии с фактической задачей, здесь в основном группа из четырех чисел
         if ar > 3.0 and ar < 4.0:
             if (w >= 30 and w < 45) and (h > 7 and h < 15):
-                print(ar, x, y, w, h)
+                # print(ar, x, y, w, h)
                 # Познакомьтесь с пребыванием
                 a = (x, y, w, h)
                 if y not in locs.keys():
@@ -143,7 +143,7 @@ def try_this():
         groupOutput = []
 
         # Извлечь каждую группу в соответствии с координатами
-        group = gray[gY - 5:gY + gH + 5, gX - 5:gX + gW + 5]
+        group = gray[gY - additional_place:gY + gH + additional_place, gX - additional_place:gX + gW + additional_place]
         # cv_show('group', group)
         # Предварительная обработка
         group = cv2.threshold(group, 0, 255,

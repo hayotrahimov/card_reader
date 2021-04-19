@@ -1,15 +1,48 @@
-def try_this(additional_place=3):
-    # Импорт инструментария
-    from imutils import contours
-    import numpy as np
-    import argparse
-    import cv2
-    import myutils
+# Импорт инструментария
+import argparse
+import math
 
+import cv2
+import numpy as np
+from deskew import determine_skew
+from imutils import contours
+
+import myutils
+
+
+# Отображение рисунка
+def show(name, img):
+    # return
+    cv2.imshow(name, img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+def deskew2(image):
+    def rotate(
+            image, angle, background) -> np.ndarray:
+        old_width, old_height = image.shape[:2]
+        angle_radian = math.radians(angle)
+        width = abs(np.sin(angle_radian) * old_height) + abs(np.cos(angle_radian) * old_width)
+        height = abs(np.sin(angle_radian) * old_width) + abs(np.cos(angle_radian) * old_height)
+
+        image_center = tuple(np.array(image.shape[1::-1]) / 2)
+        rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+        rot_mat[1, 2] += (width - old_width) / 2
+        rot_mat[0, 2] += (height - old_height) / 2
+        return cv2.warpAffine(image, rot_mat, (int(round(height)), int(round(width))), borderValue=background)
+
+    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    angle = determine_skew(grayscale)
+    rotated = rotate(image, angle, (0, 0, 0))
+    return rotated
+
+
+def try_this(additional_place=3, min_width=30, max_width=45, min_height=7, max_height=15):
     # Установить параметры
-    image = "images/image2.jpg"
+    # image = "images/image8.jpg"
     font = "images/shrift1.png"
-    # image = "images/uzcard-milliy.png"
+    image = "images/humo3.png"
     # font = "images/font-proximanova.png"
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--image", default=image, help="path to input image")
@@ -23,13 +56,6 @@ def try_this(additional_place=3):
         "5": "MasterCard",
         "6": "Discover Card"
     }
-
-    # Отображение рисунка
-    def cv_show(name, img):
-        # return
-        cv2.imshow(name, img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
 
     # Прочитать шаблон изображения
     img = cv2.imread(args["template"])
@@ -49,7 +75,7 @@ def try_this(additional_place=3):
     refCnts, hierarchy = cv2.findContours(ref.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     cv2.drawContours(img, refCnts, -1, (0, 0, 255), 3)
-    cv_show('img', img)
+    # cv_show('img', img)
     # print(np.array(refCnts).shape)
     refCnts = myutils.sort_contours(refCnts, method="слева направо")[0]  # сортировка слева направо, сверху вниз
     digits = {}
@@ -66,18 +92,19 @@ def try_this(additional_place=3):
 
     # Инициализировать ядро ​​свертки
     rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (6, 3))
-    sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+    sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 6))
 
     # Чтение входного изображения, препроцесс
     image = cv2.imread(args["image"])
-    # cv_show('image', image)
+    show('image-original', image)
+    image = deskew2(image)
+    show('reangeled', image)
     image = myutils.resize(image, width=300)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # cv_show('gray', gray)
 
     # Верхняя операция, чтобы выделить более яркие области
     tophat = cv2.morphologyEx(gray, cv2.MORPH_TOPHAT, rectKernel)
-    cv_show('tophat', tophat)
+    show('tophat', tophat)
     #
     gradX = cv2.Sobel(tophat, ddepth=cv2.CV_32F, dx=1, dy=0,  # ksize = -1 эквивалентно 3 * 3
                       ksize=-1)
@@ -108,34 +135,35 @@ def try_this(additional_place=3):
     cnts = threshCnts
     cur_img = image.copy()
     cv2.drawContours(cur_img, cnts, -1, (0, 0, 255), 1)
-    cv_show('img3', cur_img)
+    show('img3', cur_img)
     locs = {}
     cards = []
     not_cards = []
 
     # Пройдите по контуру
+    if not cnts: print("no cnts")
     for (i, c) in enumerate(cnts):
         # Рассчитать прямоугольник
         (x, y, w, h) = cv2.boundingRect(c)
         ar = w / float(h)
 
         # Выберите соответствующую область, в соответствии с фактической задачей, здесь в основном группа из четырех чисел
+        print("ar = {:.2f}, y = {}, x = {}, w = {}, h = {}".format(ar, y, x, w, h))
         if ar > 3.0 and ar < 4.0:
-            if (w >= 30 and w < 45) and (h > 7 and h < 15):
+            if (w >= min_width and w < max_width) and (h > min_height and h < max_height):
                 # print(ar, x, y, w, h)
                 # Познакомьтесь с пребыванием
                 a = (x, y, w, h)
                 if y not in locs.keys():
                     locs[y] = []
                 locs[y].append(a)
+                cards.append(a)
     for locs_ in locs.keys():
         if len(locs[locs_]) >= 4:
             cards = locs[locs_]
-    print(cards, not_cards)
     # Сортировка соответствующих контуров слева направо
     cards = sorted(cards, key=lambda x: x[0])
     output = []
-    print(cards)
 
     # Пройдите по номерам в каждом наброске
     for (i, (gX, gY, gW, gH)) in enumerate(cards):
@@ -148,7 +176,7 @@ def try_this(additional_place=3):
         # Предварительная обработка
         group = cv2.threshold(group, 0, 255,
                               cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-        cv_show('group', group)
+        show('group', group)
         # Рассчитать план каждой группы
         digitCnts, hierarchy = cv2.findContours(group.copy(), cv2.RETR_EXTERNAL,
                                                 cv2.CHAIN_APPROX_SIMPLE)
@@ -189,4 +217,4 @@ def try_this(additional_place=3):
     if output:
         print("Credit Card Type: {}".format(FIRST_NUMBER.get(output[0]) or "unknown"))
         print("Credit Card #: {}".format("".join(output)))
-    cv_show("Image", image)
+    show("Image", image)

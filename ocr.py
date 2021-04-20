@@ -148,21 +148,22 @@ def try_this(additional_place=3, min_width=30, max_width=45, min_height=7, max_h
         ar = w / float(h)
 
         # Выберите соответствующую область, в соответствии с фактической задачей, здесь в основном группа из четырех чисел
-        print("ar = {:.2f}, y = {}, x = {}, w = {}, h = {}".format(ar, y, x, w, h))
         if ar > 3.0 and ar < 4.0:
+            print("ar = {:.2f}, y = {}, x = {}, w = {}, h = {}".format(ar, y, x, w, h))
             if (w >= min_width and w < max_width) and (h > min_height and h < max_height):
                 # print(ar, x, y, w, h)
                 # Познакомьтесь с пребыванием
                 a = (x, y, w, h)
-                if y not in locs.keys():
-                    locs[y] = []
-                locs[y].append(a)
+                if h not in locs.keys():
+                    locs[h] = []
+                locs[h].append(a)
                 cards.append(a)
     for locs_ in locs.keys():
         if len(locs[locs_]) >= 4:
             cards = locs[locs_]
     # Сортировка соответствующих контуров слева направо
     cards = sorted(cards, key=lambda x: x[0])
+    print(locs, cards)
     output = []
 
     # Пройдите по номерам в каждом наброске
@@ -209,7 +210,8 @@ def try_this(additional_place=3, min_width=30, max_width=45, min_height=7, max_h
                       (gX + gW + 5, gY + gH + 5), (0, 0, 255), 1)
         cv2.putText(image, "".join(groupOutput), (gX, gY - 15),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2)
-
+        show("group 1", image)
+        print(groupOutput)
         # Получить результат
         output.extend(groupOutput)
 

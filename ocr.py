@@ -40,10 +40,10 @@ def deskew2(image):
 
 def try_this(additional_place=3, min_width=30, max_width=45, min_height=7, max_height=15):
     # Установить параметры
-    # image = "images/image8.jpg"
-    font = "images/shrift1.png"
-    image = "images/humo3.png"
-    # font = "images/font-proximanova.png"
+    # image = "images/humo5.png"
+    # font = "images/shrift1.png"
+    image = "images/card4.jpg"
+    font = "images/font-proximanova.png"
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--image", default=image, help="path to input image")
     ap.add_argument("-t", "--template", default=font, help="path to template OCR-A image")
@@ -175,12 +175,10 @@ def try_this(additional_place=3, min_width=30, max_width=45, min_height=7, max_h
         group = gray[gY - additional_place:gY + gH + additional_place, gX - additional_place:gX + gW + additional_place]
         # cv_show('group', group)
         # Предварительная обработка
-        group = cv2.threshold(group, 0, 255,
-                              cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+        group = cv2.threshold(group, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
         show('group', group)
         # Рассчитать план каждой группы
-        digitCnts, hierarchy = cv2.findContours(group.copy(), cv2.RETR_EXTERNAL,
-                                                cv2.CHAIN_APPROX_SIMPLE)
+        digitCnts, hierarchy = cv2.findContours(group.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         digitCnts = contours.sort_contours(digitCnts, method="left-to-right")[0]
 
         # Рассчитать каждое значение в каждой группе

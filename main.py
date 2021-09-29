@@ -1,5 +1,4 @@
 import re
-import uuid
 
 import cv2
 import easyocr as easyocr
@@ -41,6 +40,8 @@ def get_extracted_words(img, **kwargs):
 async def handle(request: web.Request):
     post = await request.post()
     image = post.get("image")
+    if not image:
+        return web.json_response({"status": "failed", "message": "No image is posted. send file as multipart with name image."})
     data = dict(post)
     data.pop('image')
     img_str = image.file.read()
@@ -52,8 +53,7 @@ async def handle(request: web.Request):
 
 if __name__ == '__main__':
     app = web.Application()
-    app.add_routes([web.get('/', handle),
-                    web.get('/{name}', handle),
-                    web.post('/', handle),
-                    ])
+    app.add_routes([
+        web.post('/', handle),
+    ])
     web.run_app(app)

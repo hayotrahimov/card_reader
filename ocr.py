@@ -13,9 +13,10 @@ import myutils
 # Отображение рисунка
 def show(name, img):
     # return
-    cv2.imshow(name, img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow(name, img)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    pass
 
 
 def deskew2(image):
@@ -38,12 +39,9 @@ def deskew2(image):
     return rotated
 
 
-def try_this(additional_place=3, min_width=30, max_width=45, min_height=7, max_height=15):
+def try_this(additional_place=3, min_width=30, max_width=45, min_height=7, max_height=15, image="images/card4.jpg", font = "images/font-proximanova.png"):
     # Установить параметры
-    # image = "images/humo5.png"
-    # font = "images/shrift1.png"
-    image = "images/card4.jpg"
-    font = "images/font-proximanova.png"
+
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--image", default=image, help="path to input image")
     ap.add_argument("-t", "--template", default=font, help="path to template OCR-A image")
@@ -218,3 +216,4 @@ def try_this(additional_place=3, min_width=30, max_width=45, min_height=7, max_h
         print("Credit Card Type: {}".format(FIRST_NUMBER.get(output[0]) or "unknown"))
         print("Credit Card #: {}".format("".join(output)))
     show("Image", image)
+    return {"number": "".join(output)}

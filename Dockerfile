@@ -1,6 +1,7 @@
-FROM python:3
+FROM python:3.8
 COPY server.py /
 COPY requirements.txt /
-RUN apt-get install libsm6 libxext6  -y
 RUN pip install -r requirements.txt
+RUN apt-get update && apt-get install -y python3-opencv
+RUN pip install opencv-python
 CMD [ "python", "-u", "server.py" ]

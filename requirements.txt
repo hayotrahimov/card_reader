@@ -27,3 +27,4 @@ torch==1.9.1
 torchvision==0.10.1
 typing-extensions==3.10.0.2
 yarl==1.6.3
+opencv-contrib-python==4.5.3.56
